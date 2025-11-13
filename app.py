@@ -24,7 +24,7 @@ def search():
     return jsonify(res)
 
 
-@lru_cache(maxsize=500)
+@lru_cache(maxsize=200)
 @app.route("/song/<_id>", methods=["GET"])
 def song(_id):
     s = time.time()
