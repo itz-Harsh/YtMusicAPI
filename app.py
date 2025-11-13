@@ -2,7 +2,7 @@ import yt_dlp , time
 from flask import Flask, request, jsonify
 from ytmusicapi import YTMusic 
 from concurrent.futures import ThreadPoolExecutor
-
+from functools import lru_cache
 app = Flask(__name__)
 
 ytmusic = YTMusic("headers_auth.json")  
@@ -24,7 +24,7 @@ def search():
     return jsonify(res)
 
 
-
+@lru_cache(maxsize=500)
 @app.route("/song/<_id>", methods=["GET"])
 def song(_id):
     s = time.time()
@@ -39,25 +39,6 @@ def song(_id):
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
-
-    artists = info.get("artists", [])
-    author = []
-
-    def fetch_artist_data(artist_name):
-        temp = ytmusic.search(artist_name, filter="artists", limit=1)
-        if temp and temp[0]["resultType"] == "artist":
-            artist = temp[0]
-            return {
-                "name": artist_name,
-                "id": artist["artists"][0]["id"] if artist.get("artists") else None,
-                "thumbnails": artist.get("thumbnails", []),
-            }
-
-    # parallel fetch using thread pool to reduce waiting time
-    with ThreadPoolExecutor(max_workers=3) as executor:
-        results = list(executor.map(fetch_artist_data, artists))
-
-    author = [r for r in results if r]
 
 
     formats = info.get("formats", [])
@@ -75,7 +56,7 @@ def song(_id):
         "downloadURL": download_url,
         "Format": fmt_note,
         "title": info.get("title"),
-        "author": author,
+        "author": info["artists"],
         "duration": info.get("duration"),
         "duration_string": info.get("duration_string"),
         "_id": _id,
@@ -83,7 +64,7 @@ def song(_id):
     }
     taken = time.time() - s
     print(f"Processed song {_id} in {taken:.2f} seconds")
-    return jsonify(info)
+    return jsonify(data)
 
     
 
