@@ -28,65 +28,64 @@ def search():
 @app.route("/song/<_id>", methods=["GET"])
 def song(_id):
     s = time.time()
-    # Step 1: Fetch metadata (still needed)
     raw = ytmusic.get_song(_id)
-    # url = f"https://www.youtube.com/watch?v={_id}"
+    url = f"https://www.youtube.com/watch?v={_id}"
 
-    # # Step 2: Extract info quickly (disable extra processing)
-    # ydl_opts = {
-    #     "quiet": True,
-    #     "skip_download": True,
-    #     "extract_flat": False,
-    #     "cachedir": False,
-    # }
-    # with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-    #     info = ydl.extract_info(url, download=False)
+    # Step 2: Extract info quickly (disable extra processing)
+    ydl_opts = {
+        "quiet": True,
+        "skip_download": True,
+        "extract_flat": False,
+        "cachedir": False,
+    }
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=False)
 
-    # # Step 3: Artist info lookup in parallel (so no waiting loop)
-    # artists = info.get("artists", [])
-    # author = []
+    # Step 3: Artist info lookup in parallel (so no waiting loop)
+    artists = info.get("artists", [])
+    author = []
 
-    # def fetch_artist_data(artist_name):
-    #     temp = ytmusic.search(artist_name, filter="artists", limit=1)
-    #     if temp and temp[0]["resultType"] == "artist":
-    #         artist = temp[0]
-    #         return {
-    #             "name": artist_name,
-    #             "id": artist["artists"][0]["id"] if artist.get("artists") else None,
-    #             "thumbnails": artist.get("thumbnails", []),
-    #         }
+    def fetch_artist_data(artist_name):
+        temp = ytmusic.search(artist_name, filter="artists", limit=1)
+        if temp and temp[0]["resultType"] == "artist":
+            artist = temp[0]
+            return {
+                "name": artist_name,
+                "id": artist["artists"][0]["id"] if artist.get("artists") else None,
+                "thumbnails": artist.get("thumbnails", []),
+            }
 
-    # # parallel fetch using thread pool to reduce waiting time
-    # with ThreadPoolExecutor(max_workers=3) as executor:
-    #     results = list(executor.map(fetch_artist_data, artists))
+    # parallel fetch using thread pool to reduce waiting time
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        results = list(executor.map(fetch_artist_data, artists))
 
-    # author = [r for r in results if r]
+    author = [r for r in results if r]
 
-    # # Step 4: Choose format safely (still exact logic)
-    # formats = info.get("formats", [])
-    # download_url, fmt_note = None, None
-    # if len(formats) > 6 and formats[6].get("format_note") == "medium":
-    #     download_url = formats[6]["url"]
-    #     fmt_note = formats[6]["format_note"]
-    # elif len(formats) > 5:
-    #     download_url = formats[5]["url"]
-    #     fmt_note = formats[5]["format_note"]
+    # Step 4: Choose format safely (still exact logic)
+    formats = info.get("formats", [])
+    download_url, fmt_note = None, None
+    if len(formats) > 6 and formats[6].get("format_note") == "medium":
+        download_url = formats[6]["url"]
+        fmt_note = formats[6]["format_note"]
+    elif len(formats) > 5:
+        download_url = formats[5]["url"]
+        fmt_note = formats[5]["format_note"]
 
-    # # Step 5: Build same response
-    # thumbnails = raw["videoDetails"]["thumbnail"]["thumbnails"]
-    # data = {
-    #     "downloadURL": download_url,
-    #     "Format": fmt_note,
-    #     "title": info.get("title"),
-    #     "author": author,
-    #     "duration": info.get("duration"),
-    #     "duration_string": info.get("duration_string"),
-    #     "_id": _id,
-    #     "thumbnails": thumbnails[-1]["url"] if thumbnails else None,
-    # }
-    # taken = time.time() - s
-    # print(f"Processed song {_id} in {taken:.2f} seconds")
-    return jsonify(raw)
+    # Step 5: Build same response
+    thumbnails = raw["videoDetails"]["thumbnail"]["thumbnails"]
+    data = {
+        "downloadURL": download_url,
+        "Format": fmt_note,
+        "title": info.get("title"),
+        "author": author,
+        "duration": info.get("duration"),
+        "duration_string": info.get("duration_string"),
+        "_id": _id,
+        "thumbnails": thumbnails[-1]["url"] if thumbnails else None,
+    }
+    taken = time.time() - s
+    print(f"Processed song {_id} in {taken:.2f} seconds")
+    return jsonify(data)
 
     
 
