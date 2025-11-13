@@ -83,7 +83,7 @@ def song(_id):
     }
     taken = time.time() - s
     print(f"Processed song {_id} in {taken:.2f} seconds")
-    return jsonify(data)
+    return jsonify(info)
 
     
 
