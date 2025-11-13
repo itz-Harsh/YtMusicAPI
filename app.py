@@ -31,7 +31,6 @@ def song(_id):
     raw = ytmusic.get_song(_id)
     url = f"https://www.youtube.com/watch?v={_id}"
 
-    # Step 2: Extract info quickly (disable extra processing)
     ydl_opts = {
         "quiet": True,
         "skip_download": True,
@@ -41,7 +40,6 @@ def song(_id):
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
 
-    # Step 3: Artist info lookup in parallel (so no waiting loop)
     artists = info.get("artists", [])
     author = []
 
@@ -61,7 +59,7 @@ def song(_id):
 
     author = [r for r in results if r]
 
-    # Step 4: Choose format safely (still exact logic)
+
     formats = info.get("formats", [])
     download_url, fmt_note = None, None
     if len(formats) > 6 and formats[6].get("format_note") == "medium":
@@ -71,7 +69,7 @@ def song(_id):
         download_url = formats[5]["url"]
         fmt_note = formats[5]["format_note"]
 
-    # Step 5: Build same response
+  
     thumbnails = raw["videoDetails"]["thumbnail"]["thumbnails"]
     data = {
         "downloadURL": download_url,
