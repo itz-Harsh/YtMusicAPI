@@ -1,8 +1,7 @@
 import yt_dlp , time
 from flask import Flask, request, jsonify
 from ytmusicapi import YTMusic 
-from concurrent.futures import ThreadPoolExecutor
-from functools import lru_cache
+
 app = Flask(__name__)
 
 ytmusic = YTMusic("headers_auth.json")  
@@ -24,47 +23,37 @@ def search():
     return jsonify(res)
 
 
-@lru_cache(maxsize=200)
+
 @app.route("/song/<_id>", methods=["GET"])
 def song(_id):
     s = time.time()
     raw = ytmusic.get_song(_id)
     url = f"https://www.youtube.com/watch?v={_id}"
 
-    ydl_opts = {
-        "quiet": True,
-        "skip_download": True,
-        "extract_flat": False,
-        "cachedir": False,
-    }
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+    # ydl_opts = {
+    #     "quiet": True,
+    #     "skip_download": True,
+    #     "extract_flat": False,
+    #     "cachedir": False,
+    # }
+    with yt_dlp.YoutubeDL() as ydl:
         info = ydl.extract_info(url, download=False)
 
-
-    formats = info.get("formats", [])
-    download_url, fmt_note = None, None
-    if len(formats) > 6 and formats[6].get("format_note") == "medium":
-        download_url = formats[6]["url"]
-        fmt_note = formats[6]["format_note"]
-    elif len(formats) > 5:
-        download_url = formats[5]["url"]
-        fmt_note = formats[5]["format_note"]
-
   
-    thumbnails = raw["videoDetails"]["thumbnail"]["thumbnails"]
-    data = {
-        "downloadURL": download_url,
-        "Format": fmt_note,
-        "title": info.get("title"),
-        "author": info["artists"],
-        "duration": info.get("duration"),
-        "duration_string": info.get("duration_string"),
-        "_id": _id,
-        "thumbnails": thumbnails[-1]["url"] if thumbnails else None,
-    }
-    taken = time.time() - s
-    print(f"Processed song {_id} in {taken:.2f} seconds")
-    return jsonify(data)
+    # thumbnails = raw["videoDetails"]["thumbnail"]["thumbnails"]
+    
+    # data = {
+    #     "downloadURL": "hh",
+    #     "title": info.get("title"),
+    #     "author": info["artists"],
+    #     "duration": info.get("duration"),
+    #     "duration_string": info.get("duration_string"),
+    #     "_id": _id,
+    #     "thumbnails": thumbnails[-1]["url"] if thumbnails else None,
+    # }
+    # taken = time.time() - s
+    # print(f"Processed song {_id} in {taken:.2f} seconds")
+    return jsonify(info)
 
     
 
