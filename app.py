@@ -51,7 +51,7 @@ def song(_id):
         "thumbnails": raw["videoDetails"]["thumbnail"]["thumbnails"][3]["url"]
         
     }
-    return jsonify(data)
+    return jsonify(info)
     
 
     
