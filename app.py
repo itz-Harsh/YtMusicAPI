@@ -1,4 +1,4 @@
-import yt_dlp , time
+import pytubefix
 from flask import Flask, request, jsonify
 from ytmusicapi import YTMusic 
 
@@ -26,47 +26,30 @@ def search():
 
 @app.route("/song/<_id>", methods=["GET"])
 def song(_id):
-    s = time.time()
+
     raw = ytmusic.get_song(_id)
     url = f"https://www.youtube.com/watch?v={_id}"
-
-    # ydl_opts = {
-    #     "quiet": True,
-    #     "skip_download": True,
-    #     "extract_flat": False,
-    #     "cachedir": False,
-    # }
-    with yt_dlp.YoutubeDL() as ydl:
-        info = ydl.extract_info(url, download=False)
-
-  
-    # thumbnails = raw["videoDetails"]["thumbnail"]["thumbnails"]
+    yt = pytubefix.YouTube(url)
+    stream = yt.streams.get_audio_only()
+     
+    thumbnails = raw["videoDetails"]["thumbnail"]["thumbnails"]
     
-    # data = {
-    #     "downloadURL": "hh",
-    #     "title": info.get("title"),
-    #     "author": info["artists"],
-    #     "duration": info.get("duration"),
-    #     "duration_string": info.get("duration_string"),
-    #     "_id": _id,
-    #     "thumbnails": thumbnails[-1]["url"] if thumbnails else None,
-    # }
-    # taken = time.time() - s
-    # print(f"Processed song {_id} in {taken:.2f} seconds")
-    return jsonify(info)
+    data = {
+        "downloadURL": stream.url,
+        "title": raw["videoDetails"]["title"],
+        "author": raw["videoDetails"]["author"],
+        "duration": raw["videoDetails"]["lengthSeconds"],
+        "_id": _id,
+        "thumbnails": thumbnails[-1]["url"] if thumbnails else None,
+    }
 
-    
-
+    return jsonify(data)
     
 @app.route("/artist/<_id>", methods=["GET"])   # Done Perfect 
 def artist(_id):
     info = ytmusic.get_artist(_id)
     info["songs"]["results"] = ytmusic.get_playlist(info["songs"]["browseId"])["tracks"]
     return jsonify(info)
-
-
-
-
 
 @app.route("/playlist/<_id>", methods=["GET"])
 def playlist(_id):
