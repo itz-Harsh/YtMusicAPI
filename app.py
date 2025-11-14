@@ -22,20 +22,20 @@ def search():
     res = [r for r in results if r.get("resultType") != "video"]
     return jsonify(res)
 
-
+def playable(id):
+    url = f"https://www.youtube.com/watch?v={id}"
+    yt = pytubefix.YouTube(url)
+    stream = yt.streams.get_audio_only()
+    return stream.url
 
 @app.route("/song/<_id>", methods=["GET"])
 def song(_id):
 
-    raw = ytmusic.get_song(_id)
-    url = f"https://www.youtube.com/watch?v={_id}"
-    yt = pytubefix.YouTube(url)
-    stream = yt.streams.get_audio_only()
-     
+    raw = ytmusic.get_song(_id)     
     thumbnails = raw["videoDetails"]["thumbnail"]["thumbnails"]
     
     data = {
-        "downloadURL": stream.url,
+        "downloadURL": playable(_id),
         "title": raw["videoDetails"]["title"],
         "author": raw["videoDetails"]["author"],
         "duration": raw["videoDetails"]["lengthSeconds"],
