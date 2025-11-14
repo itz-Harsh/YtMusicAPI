@@ -24,7 +24,7 @@ def search():
 
 def playable(id):
     url = f"https://www.youtube.com/watch?v={id}"
-    yt = pytubefix.YouTube(url)
+    yt = pytubefix.YouTube(url, use_po_token=True)
     stream = yt.streams.get_audio_only()
     return stream.url
 
