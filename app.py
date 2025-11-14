@@ -31,11 +31,16 @@ def song(_id):
     url = f"https://www.youtube.com/watch?v={_id}"
 
     ydl_opts = {
-        "quiet": True,
-        "skip_download": True,
-        "format": "bestaudio/best"
+    "quiet": True,
+    "skip_download": True,
+    "format": "bestaudio/best",
+    "cookiefile": "youtube.com.txt",
+    "extractor_args": {
+        "youtube": {
+            "player_client": ["default"]  # avoids JS runtime issues
+        }
     }
-
+}
     with yt_dlp.YoutubeDL() as ydl:
         info = ydl.extract_info(url, download=False)
 
